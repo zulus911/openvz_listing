@@ -7,7 +7,6 @@ class Vzlist
 	@ssh_string
 	@remote
 	def initialize (ssh = false, *ssh_cred)
-		@options = options
 		@remote = ssh 
 		if not (ssh)
 		    $LOG.debug('Use local vzlist') 
@@ -19,12 +18,12 @@ class Vzlist
         	$LOG.fatal("initialization fault")
         	abort
         end
-        self.execute_command
 	end
 	
-    def execute_command ()
-    	runtime = @ssh_string+' "sudo vzlist '+@options.to_s+' "' if @remote
-    	runtime = '"sudo vzlist '+@options.to_s+' "' if not(@remote)
+    def execute_command (cmd)
+    
+    	runtime = @ssh_string + cmd if @remote
+    	runtime = cmd if not(@remote)
 
     	$LOG.debug("excute: #{runtime}")
     	
@@ -32,18 +31,24 @@ class Vzlist
     		if wait_thr.value == 0 
     			result = stdout.read
     			$LOG.debug("Json from vzlist took. All normal")
-    		else 
+    		else
+    			result = false 
     			erro_return = stderr.read
     			$LOG.fatal("Take error. Error - #{erro_return}")
     		end
     	end
-    	return 
+    	$LOG.debug("Query result:\n #{result}")
+    	return result
     end
- 
+    def active_node_count()
+    	query =  " \'sudo vzlist -jo ctid\' "
+    	count = self.execute_command(query)
+    	p count
+    end
 
 end
 
 
-test = Vzlist.new("-jo ctid",true,"apanovich","88.85.72.50","21222")
+test = Vzlist.new(true,"apanovich","88.85.72.50","21222")
 #test = Vzlist.new()
-#test.parse_result
+test.active_node_count
