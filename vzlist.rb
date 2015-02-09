@@ -9,14 +9,24 @@ class Vzlist
 	def initialize (ssh = false, *ssh_cred)
 		@remote = ssh 
 		if not (ssh)
-		    $LOG.debug('Use local vzlist') 
+		    $LOG.debug('Use local vzlist')
+
 		elsif ssh_cred.count == 3
 			$LOG.debug('Use remote vzlist via ssh')
 			@ssh_string = 'ssh '+ssh_cred[0].to_s+'@'+ssh_cred[1].to_s+' -p '+ssh_cred[2].to_s
 			$LOG.debug("initial line for ssh connection: '#{@ssh_string}'")
+			Open3.popen3(@ssh_string+" \'exit\' ") do | stdin, stdout, stderr, wait_thr |
+				if wait_thr.value == 0
+					$LOG.debug('Connetction is ok')
+				else
+					$LOG.fatal("Error: #{stderr.read}")
+					raise ("Bad connection")
+				end
+			end
+
         else
         	$LOG.fatal("initialization fault")
-        	abort
+        	raise ("initialization fault")
         end
 	end
 	
@@ -31,19 +41,34 @@ class Vzlist
     		if wait_thr.value == 0 
     			result = stdout.read
     			$LOG.debug("Json from vzlist took. All normal")
+    			return result
     		else
-    			result = false 
     			erro_return = stderr.read
     			$LOG.fatal("Take error. Error - #{erro_return}")
+    			return false
     		end
     	end
-    	$LOG.debug("Query result:\n #{result}")
-    	return result
+    	return false
     end
+    
     def active_node_count()
     	query =  " \'sudo vzlist -jo ctid\' "
     	count = self.execute_command(query)
-    	p count
+    	return JSON.parse(count).count if count
+    end
+    
+    def all_node_count()
+    	query =  " \'sudo vzlist -jao ctid\' "
+    	count = self.execute_command(query)
+    	return JSON.parse(count).count if count
+    end
+    
+    def all_numproc()
+    	query = " \'sudo vzlist -jo numproc\' "
+    	count = self.execute_command(query)
+    	counter = 0
+        JSON.parse(count).each { |node| counter =+ node["numproc"]["held"] } if count
+        return counter
     end
 
 end
@@ -51,4 +76,6 @@ end
 
 test = Vzlist.new(true,"apanovich","88.85.72.50","21222")
 #test = Vzlist.new()
-test.active_node_count
+#test.active_node_count
+#test.all_node_count
+puts test.all_numproc
