@@ -55,20 +55,26 @@ class Vzlist
     	query =  " \'sudo vzlist -jo ctid\' "
     	count = self.execute_command(query)
     	return JSON.parse(count).count if count
+    	return false
     end
     
     def all_node_count()
     	query =  " \'sudo vzlist -jao ctid\' "
     	count = self.execute_command(query)
     	return JSON.parse(count).count if count
+    	return false
     end
     
     def all_numproc()
     	query = " \'sudo vzlist -jo numproc\' "
     	count = self.execute_command(query)
     	counter = 0
-        JSON.parse(count).each { |node| counter =+ node["numproc"]["held"] } if count
-        return counter
+    	if count
+        	JSON.parse(count).each { |node| counter =+ node["numproc"]["held"] } 
+        	return counter
+        else
+        	return false
+        end
     end
 
 end
