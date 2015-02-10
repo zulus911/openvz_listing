@@ -53,40 +53,41 @@ class Vzlist
     
     def active_node_count()
     	query =  " \'sudo vzlist -jo ctid\' "
-    	count = self.execute_command(query)
+    	count = execute_command(query)
     	return JSON.parse(count).count if count
     	return false
     end
     
     def all_node_count()
     	query =  " \'sudo vzlist -jao ctid\' "
-    	count = self.execute_command(query)
+    	count = execute_command(query)
     	return JSON.parse(count).count if count
     	return false
     end
     
     def all_numproc()
     	query = " \'sudo vzlist -jo numproc\' "
-    	count = self.execute_command(query)
+    	count = execute_command(query)
     	counter = 0
     	if count
-        	JSON.parse(count).each { |node| counter =+ node[:numproc][:held] } 
+        	JSON.parse(count).each { |node| counter += node["numproc"]["held"].to_i } 
         	return counter
         else
         	return false
         end
     end
 
-    def method_name
+    def method_namemc
+
     	
     end
-
     private :execute_command
+
 end
 
 
 test = Vzlist.new(true,"apanovich","88.85.72.50","21222")
 #test = Vzlist.new()
 #test.active_node_count
-#test.all_node_count
-puts test.all_numproc
+p test.all_numproc
+
