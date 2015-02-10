@@ -70,13 +70,18 @@ class Vzlist
     	count = self.execute_command(query)
     	counter = 0
     	if count
-        	JSON.parse(count).each { |node| counter =+ node["numproc"]["held"] } 
+        	JSON.parse(count).each { |node| counter =+ node[:numproc][:held] } 
         	return counter
         else
         	return false
         end
     end
 
+    def method_name
+    	
+    end
+
+    private :execute_command
 end
 
 
